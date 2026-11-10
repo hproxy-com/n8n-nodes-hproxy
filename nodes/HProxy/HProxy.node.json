@@ -1,0 +1,30 @@
+{
+	"node": "@hproxy/n8n-nodes-hproxy.hProxy",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Development", "Utility"],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://hproxy.com/docs/authentication"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://github.com/hproxy-com/n8n-nodes-hproxy#readme"
+			}
+		]
+	},
+	"alias": [
+		"proxy",
+		"proxies",
+		"residential proxy",
+		"rotating proxy",
+		"sticky session",
+		"free proxy list",
+		"proxy checker",
+		"ip lookup",
+		"geolocation",
+		"web scraping"
+	]
+}

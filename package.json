@@ -1,0 +1,72 @@
+{
+	"name": "@hproxy/n8n-nodes-hproxy",
+	"version": "0.1.0",
+	"description": "HProxy for n8n: generate residential proxy lines, read your plans, traffic and balance, and use the free proxy list, IP lookup and proxy checker.",
+	"license": "MIT",
+	"homepage": "https://hproxy.com/residential-proxies",
+	"keywords": [
+		"n8n-community-node-package",
+		"n8n",
+		"hproxy",
+		"proxy",
+		"residential-proxies",
+		"rotating-proxies",
+		"sticky-sessions",
+		"free-proxy-list",
+		"proxy-checker",
+		"ip-lookup",
+		"web-scraping"
+	],
+	"author": {
+		"name": "HProxy",
+		"email": "support@hproxy.com",
+		"url": "https://hproxy.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/hproxy-com/n8n-nodes-hproxy.git"
+	},
+	"bugs": {
+		"url": "https://github.com/hproxy-com/n8n-nodes-hproxy/issues"
+	},
+	"scripts": {
+		"build": "n8n-node build",
+		"build:watch": "tsc --watch",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix",
+		"format": "prettier --write nodes credentials test scripts/scan.mjs",
+		"format:check": "prettier --check nodes credentials test scripts/scan.mjs",
+		"test": "n8n-node build && node --test \"test/*.test.js\"",
+		"test:live": "n8n-node build && node --test \"test/live/*.test.js\"",
+		"scan": "n8n-node build && node scripts/scan.mjs",
+		"release": "n8n-node release",
+		"prepublishOnly": "n8n-node prerelease"
+	},
+	"files": [
+		"dist"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"strict": true,
+		"credentials": [
+			"dist/credentials/HProxyApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/HProxy/HProxy.node.js"
+		]
+	},
+	"devDependencies": {
+		"@n8n/node-cli": "0.55.0",
+		"eslint": "9.39.4",
+		"prettier": "3.8.3",
+		"release-it": "20.2.0",
+		"typescript": "5.9.3"
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*"
+	}
+}

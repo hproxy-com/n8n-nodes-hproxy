@@ -1,0 +1,7 @@
+# Every text file is stored and checked out with LF line endings, on every system.
+# n8n's Prettier settings (.prettierrc.js) expect LF, and Windows git would otherwise
+# turn them into CRLF on checkout.
+* text=auto eol=lf
+
+*.svg text eol=lf
+*.png binary

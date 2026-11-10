@@ -1,0 +1,8 @@
+{
+  "name": "hproxy-n8n-node-scan",
+  "private": true,
+  "description": "Pinned install of n8n's verification scanner, used by scripts/scan.mjs. Never published.",
+  "dependencies": {
+    "@n8n/scan-community-package": "0.41.0"
+  }
+}
