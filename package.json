@@ -1,6 +1,6 @@
 {
 	"name": "@hproxy/n8n-nodes-hproxy",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "HProxy for n8n: generate residential proxy lines, read your plans, traffic and balance, and use the free proxy list, IP lookup and proxy checker.",
 	"license": "MIT",
 	"homepage": "https://hproxy.com/residential-proxies",

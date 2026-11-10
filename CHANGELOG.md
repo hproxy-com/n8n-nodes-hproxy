@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+The same node as 0.1.0, now published through npm's trusted publishing from GitHub Actions, and the workflows run on current actions (checkout 7.0.1, setup-node 7.1.0, Node 24).
+
 ## 0.1.0
 
 First release.

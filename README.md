@@ -164,6 +164,7 @@ Built and tested against n8n-workflow 2.46. The node uses n8n's declarative styl
 
 ## Version history
 
+- **0.1.1:** the same node, published through npm's trusted publishing from GitHub Actions.
 - **0.1.0:** first release. Proxy Generate, Plan Get, Get Many and Get Traffic, Account Get Balance and Get Bandwidth History, and the free tools Get Free Proxies, Check Proxies and Look Up IP.
 
 ## License
