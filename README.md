@@ -115,7 +115,7 @@ Working public proxies from the [free proxy list](https://hproxy.com/free-proxy-
 
 ### Free Tool: Check Proxies
 
-Enter up to 1,000 proxies, one per line or separated by commas, as `ip:port`, `host:port:user:pass` or `user:pass@host:port`. An expression can hand in a list from earlier nodes. HProxy tests each one live and the node returns one item per proxy with `status` (alive, dead, unchecked and more), protocols, anonymity, latency, exit IP and location. The proxies you send are never stored or added to the free list.
+Enter up to 1,000 proxies, one per line or separated by commas, as `ip:port`, `host:port:user:pass` or `user:pass@host:port`. An expression can hand in a list from earlier nodes. HProxy tests each one live and the node returns one item per proxy with `status` (alive, dead, unchecked and more), protocols, anonymity, latency, exit IP and location.
 
 ### Free Tool: Look Up IP
 
