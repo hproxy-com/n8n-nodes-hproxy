@@ -122,11 +122,28 @@ const createCredential = async () => {
   await modal.waitFor();
   return modal;
 };
-const saveCredential = async (modal) => {
+// n8n 2.44 closes the dialog after saving only when the connection test passed (CredentialEdit.vue, closeOnSave), and
+// opening an existing credential tests it again and shows the green "Connection tested successfully" banner: so the
+// video saves, then reopens the credential with its pencil to show the passing test.
+const saveCredential = async (modal, { reopen = true } = {}) => {
   await clickOn(modal.getByTestId("credential-save-button"));
+  const closed = await modal.waitFor({ state: "hidden", timeout: 60000 }).then(() => true).catch(() => false);
+  if (!closed) {
+    await page.getByText(/Connection tested successfully/i).first().waitFor({ timeout: 30000 });
+    await pause(2500);
+    await clickOn(page.getByRole("dialog").filter({ has: modal }).getByRole("button", { name: /close/i }));
+    return;
+  }
+  log("credential saved; its dialog closed itself, so the connection test passed");
+  await pause(1500);
+  if (!reopen) return;
+  await clickOn(page.getByTestId("credential-edit-button").locator("svg").first());
+  const again = page.getByTestId("editCredential-modal");
+  await again.waitFor();
   await page.getByText(/Connection tested successfully/i).first().waitFor({ timeout: 60000 });
-  await pause(2500);
-  await clickOn(page.getByRole("dialog").filter({ has: modal }).getByRole("button", { name: /close/i }));
+  log("reopened: Connection tested successfully");
+  await pause(3500);
+  await clickOn(page.getByRole("dialog").filter({ has: again }).getByRole("button", { name: /close/i }));
 };
 const execute = async () => {
   await clickOn(page.getByTestId("node-execute-button"));
@@ -234,7 +251,7 @@ try {
     await pause(1000);
     const modal = await createCredential();
     await typeInto(modal.getByTestId("parameter-input-baseUrl").locator("input, textarea"), "http://ollama:11434", 40);
-    await saveCredential(modal);
+    await saveCredential(modal, { reopen: false });
     await setDropdown("model", "qwen2.5:3b");
     await pause(800);
     await clickOn(page.getByTestId("ndv-close-button"));
