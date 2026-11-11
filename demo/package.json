@@ -1,0 +1,9 @@
+{
+  "name": "hproxy-n8n-demo-recorder",
+  "private": true,
+  "description": "Records the demo video for n8n's verification review (run by .github/workflows/demo-video.yml)",
+  "type": "module",
+  "dependencies": {
+    "playwright": "1.62.1"
+  }
+}

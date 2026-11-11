@@ -46,8 +46,9 @@ jobs:
         working-directory: demo
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null
-          npm install --no-save --no-audit --no-fund playwright@1.62.1
-          npx playwright install --with-deps chromium
+          npm install --no-audit --no-fund
+          npx --no-install playwright --version
+          npx --no-install playwright install --with-deps chromium
 
       - name: Record
         working-directory: demo
