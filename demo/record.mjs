@@ -145,9 +145,11 @@ const saveCredential = async (modal, { reopen = true } = {}) => {
   await pause(3500);
   await clickOn(page.getByRole("dialog").filter({ has: again }).getByRole("button", { name: /close/i }));
 };
+// The output panel says "No output data" before a run, so only real results count: the data view or "N item(s)".
 const execute = async () => {
+  const out = page.getByTestId("output-panel");
   await clickOn(page.getByTestId("node-execute-button"));
-  await page.getByTestId("output-panel").getByTestId("ndv-data-container").or(page.getByTestId("output-panel").getByText(/No output data|item/i)).first().waitFor({ timeout: 90000 });
+  await out.getByTestId("ndv-data-container").or(out.getByText(/^\s*\d+ items?\s*$/)).first().waitFor({ timeout: 90000 });
   await pause(3500);
 };
 const setDropdown = async (param, option) => {

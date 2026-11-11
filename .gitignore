@@ -2,3 +2,7 @@ node_modules
 dist
 *.tgz
 .scan
+
+# The demo recorder's output (videos, screenshots): kept on disk, never in git
+demo/out/
+demo/node_modules/
