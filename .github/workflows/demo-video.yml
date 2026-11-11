@@ -1,0 +1,76 @@
+# Records the demo video n8n's Creator Portal asks for before its manual review (max 5 minutes, one take):
+# install the node from npm in a running n8n, a passing credential test, the node's actions, and the node used
+# as a tool by an AI agent. Everything runs on this throwaway GitHub machine: n8n and a small open model (Ollama)
+# in containers, a browser driven by demo/record.mjs whose screen is recorded. Run it by hand from the Actions tab.
+name: Demo video
+
+on:
+  workflow_dispatch:
+    inputs:
+      node_version:
+        description: "Version of @hproxy/n8n-nodes-hproxy to install from npm"
+        required: true
+        default: "0.1.1"
+
+permissions:
+  contents: read
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - name: Start n8n and a small open model
+        run: |
+          docker network create demo
+          docker run -d --name ollama --network demo ollama/ollama:0.40.11
+          docker run -d --name n8n --network demo -p 5678:5678 \
+            -e N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true \
+            -e N8N_DIAGNOSTICS_ENABLED=false \
+            -e N8N_PERSONALIZATION_ENABLED=false \
+            -e N8N_VERSION_NOTIFICATIONS_ENABLED=false \
+            -e N8N_TEMPLATES_ENABLED=false \
+            -e N8N_SECURE_COOKIE=false \
+            n8nio/n8n:2.44.7
+          docker exec ollama ollama pull qwen2.5:3b
+          for i in $(seq 1 90); do curl -sf http://localhost:5678/healthz && break; sleep 2; done
+          curl -sf http://localhost:5678/healthz
+
+      - name: Install the recorder (Playwright Chromium, ffmpeg)
+        working-directory: demo
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null
+          npm install --no-save --no-audit --no-fund playwright@1.62.1
+          npx playwright install --with-deps chromium
+
+      - name: Record
+        working-directory: demo
+        env:
+          HPROXY_API_KEY: ${{ secrets.HPROXY_DEMO_API_KEY }}
+          NODE_PACKAGE: "@hproxy/n8n-nodes-hproxy@${{ inputs.node_version }}"
+        run: node record.mjs
+
+      - name: Make the mp4 and a contact sheet
+        if: always()
+        working-directory: demo/out
+        run: |
+          ls -la
+          webm=$(ls -1 *.webm 2>/dev/null | head -1)
+          if [ -n "$webm" ]; then
+            ffmpeg -y -loglevel error -i "$webm" -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -movflags +faststart hproxy-n8n-demo.mp4
+            ffprobe -v error -show_entries format=duration -of csv=p=0 hproxy-n8n-demo.mp4
+            ffmpeg -y -loglevel error -i hproxy-n8n-demo.mp4 -vf "fps=1/10,scale=480:-1,tile=4x6" -frames:v 1 contact-sheet.png
+          fi
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: demo-video
+          path: demo/out/
+          retention-days: 3
