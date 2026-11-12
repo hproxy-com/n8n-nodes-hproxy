@@ -39,11 +39,11 @@ describe(
 	'live: HProxy keyless endpoints',
 	{ skip: !live && 'set HPROXY_LIVE=1 to reach hproxy.com' },
 	() => {
-		it('Get Free Proxies returns at most 3 SOCKS5 proxies in Germany, simplified', async () => {
+		it('Proxy > Get Many returns at most 3 SOCKS5 proxies in Germany, simplified', async () => {
 			const { requests, items, error } = await harness.run({
 				parameters: {
-					resource: 'freeTool',
-					operation: 'getFreeProxies',
+					resource: 'proxy',
+					operation: 'getMany',
 					limit: 3,
 					filters: { country: 'DE', protocols: ['socks5'] },
 				},
@@ -65,9 +65,9 @@ describe(
 			}
 		});
 
-		it('Look Up IP places 8.8.8.8 in the US network of AS15169', async () => {
+		it('IP Address > Get places 8.8.8.8 in the US network of AS15169', async () => {
 			const { requests, items, error } = await harness.run({
-				parameters: { resource: 'freeTool', operation: 'lookUpIp', ip: '8.8.8.8' },
+				parameters: { resource: 'ipAddress', operation: 'get', ip: '8.8.8.8' },
 				transport: fetchTransport,
 			});
 			assert.equal(error, undefined, error && `${error.message}: ${error.description}`);

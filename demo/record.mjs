@@ -212,8 +212,8 @@ try {
   });
 
   await step("run-free-proxies", async () => {
-    await setDropdown("resource", "Free Tool");
-    await setDropdown("operation", "Get Free Proxies");
+    await setDropdown("resource", "Proxy");
+    await setDropdown("operation", "Get Many");
     await pause(600);
     await typeInto(page.getByTestId("parameter-input-limit").locator("input"), "5");
     await page.keyboard.press("Tab");
@@ -221,7 +221,8 @@ try {
   });
 
   await step("run-ip-lookup", async () => {
-    await setDropdown("operation", "Look Up IP");
+    await setDropdown("resource", "IP Address");
+    await setDropdown("operation", "Get");
     await pause(600);
     await typeInto(page.getByTestId("parameter-input-ip").locator("input, textarea"), "8.8.8.8", 70);
     await page.keyboard.press("Tab");
@@ -266,13 +267,13 @@ try {
     const tool = page.getByTestId("node-creator-item-name").getByText(/^HProxy( Tool)?$/);
     await clickOn(tool);
     await pause(1200);
-    const action = nodeCreatorItem("Look up an IP address");
+    const action = nodeCreatorItem("Get an IP address");
     if (await action.count()) await clickOn(action);
     await page.getByTestId("ndv").waitFor();
     await pause(1000);
     if (!(await page.getByTestId("parameter-input-ip").count())) {
-      await setDropdown("resource", "Free Tool");
-      await setDropdown("operation", "Look Up IP");
+      await setDropdown("resource", "IP Address");
+      await setDropdown("operation", "Get");
     }
     const ipField = page.getByTestId("parameter-input-ip");
     await moveTo(ipField);

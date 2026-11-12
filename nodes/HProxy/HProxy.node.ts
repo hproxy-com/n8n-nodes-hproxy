@@ -1,10 +1,15 @@
 import { NodeConnectionTypes, type INodeType, type INodeTypeDescription } from 'n8n-workflow';
 import { searchPlans } from './listSearch/searchPlans';
 import { accountDescription } from './resources/account';
-import { freeToolDescription } from './resources/freeTool';
+import { ipAddressDescription } from './resources/ipAddress';
 import { planDescription } from './resources/plan';
 import { proxyDescription } from './resources/proxy';
-import { CREDENTIAL_TYPE, HPROXY_ORIGIN, KEYED_RESOURCES } from './shared/constants';
+import {
+	CREDENTIAL_TYPE,
+	HPROXY_ORIGIN,
+	KEYED_RESOURCES,
+	KEYLESS_OPERATIONS,
+} from './shared/constants';
 
 export class HProxy implements INodeType {
 	description: INodeTypeDescription = {
@@ -24,11 +29,15 @@ export class HProxy implements INodeType {
 		outputs: [NodeConnectionTypes.Main],
 		credentials: [
 			{
-				// Shown for the keyed resources only. Not marked required, because n8n would then
-				// refuse the free tools, which run without a key: requireApiKey (shared/hooks.ts)
-				// asks for the key on the keyed operations instead.
+				// Shown only for the operations that need a key: Account, Plan and Proxy > Generate.
+				// Proxy > Check, Proxy > Get Many and IP Address > Get run without one. Not marked
+				// required, because n8n would then refuse those keyless operations: requireApiKey
+				// (shared/hooks.ts) asks for the key on the keyed operations instead.
 				name: CREDENTIAL_TYPE,
-				displayOptions: { show: { resource: KEYED_RESOURCES } },
+				displayOptions: {
+					show: { resource: KEYED_RESOURCES },
+					hide: { operation: KEYLESS_OPERATIONS },
+				},
 			},
 		],
 		requestDefaults: {
@@ -52,8 +61,8 @@ export class HProxy implements INodeType {
 						value: 'account',
 					},
 					{
-						name: 'Free Tool',
-						value: 'freeTool',
+						name: 'IP Address',
+						value: 'ipAddress',
 					},
 					{
 						name: 'Plan',
@@ -67,7 +76,7 @@ export class HProxy implements INodeType {
 				default: 'proxy',
 			},
 			...accountDescription,
-			...freeToolDescription,
+			...ipAddressDescription,
 			...planDescription,
 			...proxyDescription,
 		],

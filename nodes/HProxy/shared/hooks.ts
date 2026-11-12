@@ -147,7 +147,7 @@ export const prepareGenerateBody: PreSendAction = async function (
 	return requestOptions;
 };
 
-/** Check Proxies: the typed or mapped list becomes { proxies: [...] }, 1 to 1,000 entries. */
+/** Proxy > Check: the typed or mapped list becomes { proxies: [...] }, 1 to 1,000 entries. */
 export const prepareProxyCheckBody: PreSendAction = async function (
 	this: IExecuteSingleFunctions,
 	requestOptions,
@@ -171,7 +171,7 @@ export const prepareProxyCheckBody: PreSendAction = async function (
 	return requestOptions;
 };
 
-/** Look Up IP: the address goes into the URL, so only address characters may pass. */
+/** IP Address > Get: the address goes into the URL, so only address characters may pass. */
 export const requireIpAddress: PreSendAction = async function (
 	this: IExecuteSingleFunctions,
 	requestOptions,
@@ -190,7 +190,7 @@ export const requireIpAddress: PreSendAction = async function (
 const ANONYMITY = ['anonymous', 'elite', 'transparent'];
 const PROTOCOLS = ['http', 'https', 'socks4', 'socks5'];
 
-/** Get Free Proxies: the filters and options become the query of GET /api/proxy-list. */
+/** Proxy > Get Many: the filters and options become the query of GET /api/proxy-list. */
 export const prepareFreeProxyQuery: PreSendAction = async function (
 	this: IExecuteSingleFunctions,
 	requestOptions,

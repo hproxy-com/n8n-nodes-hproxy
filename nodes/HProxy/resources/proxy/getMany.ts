@@ -1,95 +1,16 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { SIMPLE_FIELDS } from '../../shared/constants';
-import { simplifyField } from '../../shared/descriptions';
-import { checkResponse } from '../../shared/errors';
-import {
-	listToItems,
-	prepareFreeProxyQuery,
-	prepareProxyCheckBody,
-	requireIpAddress,
-	simplifyTo,
-} from '../../shared/hooks';
 
-const showForFreeTool = (operation: string[]) => ({ resource: ['freeTool'], operation });
+const showForGetMany = { resource: ['proxy'], operation: ['getMany'] };
 
-/**
- * Free Tool > Check Proxies, Get Free Proxies, Look Up IP: HProxy's keyless endpoints
- * (POST /api/proxy-check, GET /api/proxy-list, GET /api/ip/{ip}). No API key is sent.
- */
-export const freeToolDescription: INodeProperties[] = [
-	{
-		displayName: 'Operation',
-		name: 'operation',
-		type: 'options',
-		noDataExpression: true,
-		displayOptions: { show: { resource: ['freeTool'] } },
-		options: [
-			{
-				name: 'Check Proxies',
-				value: 'checkProxies',
-				action: 'Check proxies',
-				description:
-					'Test proxies live and get their protocols, anonymity, speed and location, free without a key',
-				routing: {
-					request: { method: 'POST', url: '/api/proxy-check' },
-					send: { preSend: [prepareProxyCheckBody] },
-					output: {
-						postReceive: [
-							checkResponse,
-							listToItems('results'),
-							simplifyTo(SIMPLE_FIELDS.proxyCheck),
-						],
-					},
-				},
-			},
-			{
-				name: 'Get Free Proxies',
-				value: 'getFreeProxies',
-				action: 'Get free proxies',
-				description: 'Get working public proxies from the free proxy list, free without a key',
-				routing: {
-					request: { method: 'GET', url: '/api/proxy-list' },
-					send: { preSend: [prepareFreeProxyQuery] },
-					output: {
-						postReceive: [checkResponse, listToItems(), simplifyTo(SIMPLE_FIELDS.freeProxy)],
-					},
-				},
-			},
-			{
-				name: 'Look Up IP',
-				value: 'lookUpIp',
-				action: 'Look up an IP address',
-				description: 'Get the country, city, network and ISP of an IP address, free without a key',
-				routing: {
-					request: { method: 'GET', url: '=/api/ip/{{ String($parameter.ip).trim() }}' },
-					send: { preSend: [requireIpAddress] },
-					output: {
-						postReceive: [checkResponse, simplifyTo(SIMPLE_FIELDS.ipLookup)],
-					},
-				},
-			},
-		],
-		default: 'getFreeProxies',
-	},
-	{
-		displayName: 'Proxies',
-		name: 'proxies',
-		type: 'string',
-		required: true,
-		default: '',
-		typeOptions: { rows: 4 },
-		placeholder: 'e.g. 203.0.113.7:1080',
-		description:
-			'Up to 1,000 proxies, one per line or separated by commas, written as ip:port, host:port:user:pass or user:pass@host:port',
-		displayOptions: { show: showForFreeTool(['checkProxies']) },
-	},
+/** The fields of Proxy > Get Many (GET /api/proxy-list, HProxy's free proxy list, no key). */
+export const getManyFields: INodeProperties[] = [
 	{
 		displayName: 'Return All',
 		name: 'returnAll',
 		type: 'boolean',
 		default: false,
 		description: 'Whether to return all results or only up to a given limit',
-		displayOptions: { show: showForFreeTool(['getFreeProxies']) },
+		displayOptions: { show: showForGetMany },
 	},
 	{
 		displayName: 'Limit',
@@ -98,7 +19,7 @@ export const freeToolDescription: INodeProperties[] = [
 		default: 50,
 		typeOptions: { minValue: 1, maxValue: 10000 },
 		description: 'Max number of results to return',
-		displayOptions: { show: { ...showForFreeTool(['getFreeProxies']), returnAll: [false] } },
+		displayOptions: { show: { ...showForGetMany, returnAll: [false] } },
 		routing: {
 			send: { type: 'query', property: 'limit' },
 			output: { maxResults: '={{$value}}' },
@@ -110,7 +31,7 @@ export const freeToolDescription: INodeProperties[] = [
 		type: 'collection',
 		placeholder: 'Add Filter',
 		default: {},
-		displayOptions: { show: showForFreeTool(['getFreeProxies']) },
+		displayOptions: { show: showForGetMany },
 		options: [
 			{
 				displayName: 'Anonymity',
@@ -215,7 +136,7 @@ export const freeToolDescription: INodeProperties[] = [
 		type: 'collection',
 		placeholder: 'Add Option',
 		default: {},
-		displayOptions: { show: showForFreeTool(['getFreeProxies']) },
+		displayOptions: { show: showForGetMany },
 		options: [
 			{
 				displayName: 'Sort By',
@@ -238,18 +159,4 @@ export const freeToolDescription: INodeProperties[] = [
 			},
 		],
 	},
-	{
-		displayName: 'IP Address',
-		name: 'ip',
-		type: 'string',
-		required: true,
-		default: '',
-		placeholder: 'e.g. 8.8.8.8',
-		description: 'A public IPv4 or IPv6 address',
-		displayOptions: { show: showForFreeTool(['lookUpIp']) },
-	},
-	simplifyField({
-		resource: ['freeTool'],
-		operation: ['checkProxies', 'getFreeProxies', 'lookUpIp'],
-	}),
 ];

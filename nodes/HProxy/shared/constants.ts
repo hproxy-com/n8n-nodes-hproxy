@@ -4,8 +4,20 @@ export const HPROXY_ORIGIN = 'https://hproxy.com';
 /** The credential type this node authenticates with (see credentials/HProxyApi.credentials.ts). */
 export const CREDENTIAL_TYPE = 'hProxyApi';
 
-/** The resources that call HProxy with an API key. The free tools need no key. */
+/**
+ * The resources with operations that call HProxy with an API key: every operation of Account and
+ * Plan, and Proxy > Generate. IP Address > Get needs no key, so IP Address is not listed.
+ */
 export const KEYED_RESOURCES = ['account', 'plan', 'proxy'];
+
+/**
+ * The operations of a keyed resource that need no key: Proxy > Check and Proxy > Get Many,
+ * HProxy's free proxy checker and free proxy list. The credential is hidden for them by operation
+ * value alone (n8n joins hide rules with OR and show rules with AND), so no keyed operation may use
+ * these values; that is why the free list's Get Many has the value getMany and not getAll, which
+ * Plan > Get Many already uses. test/description.test.js checks both rules.
+ */
+export const KEYLESS_OPERATIONS = ['check', 'getMany'];
 
 /** The most proxies one free check takes (POST /api/proxy-check). */
 export const MAX_PROXIES_PER_CHECK = 1000;

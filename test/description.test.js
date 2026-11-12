@@ -10,6 +10,7 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { NodeHelpers } = require('n8n-workflow');
 
 const ROOT = path.join(__dirname, '..');
 const DIST = path.join(ROOT, 'dist');
@@ -31,6 +32,19 @@ function operations() {
 				option,
 			})),
 		);
+}
+
+/**
+ * Whether n8n shows the HProxy credential for this resource and operation. n8n hands a credential
+ * to a request only when it is shown (the engine's getCredentials runs the same displayParameter).
+ */
+function credentialShown(resource, operation) {
+	return NodeHelpers.displayParameter(
+		{ resource, operation },
+		description.credentials[0],
+		null,
+		description,
+	);
 }
 
 function walkFiles(directory) {
@@ -80,10 +94,40 @@ describe('node description', () => {
 		assert.ok(description.subtitle);
 	});
 
-	it('shows the credential for the keyed resources only, so the free tools run without a key', () => {
+	it('shows the credential exactly for the operations that need a key, by resource and operation', () => {
 		assert.deepEqual(description.credentials, [
-			{ name: 'hProxyApi', displayOptions: { show: { resource: ['account', 'plan', 'proxy'] } } },
+			{
+				name: 'hProxyApi',
+				displayOptions: {
+					show: { resource: ['account', 'plan', 'proxy'] },
+					hide: { operation: ['check', 'getMany'] },
+				},
+			},
 		]);
+		const shown = operations()
+			.filter(({ resource, option }) => credentialShown(resource, option.value))
+			.map(({ resource, option }) => `${resource}.${option.value}`)
+			.sort();
+		assert.deepEqual(shown, [
+			'account.getBalance',
+			'account.getBandwidthHistory',
+			'plan.get',
+			'plan.getAll',
+			'plan.getTraffic',
+			'proxy.generate',
+		]);
+	});
+
+	it('has no Free Tool resource: every operation sits on the object it acts on', () => {
+		const resource = description.properties.find((property) => property.name === 'resource');
+		assert.deepEqual(
+			resource.options.map((option) => `${option.name}=${option.value}`),
+			['Account=account', 'IP Address=ipAddress', 'Plan=plan', 'Proxy=proxy'],
+		);
+		const proxyOperations = operations()
+			.filter(({ resource: name }) => name === 'proxy')
+			.map(({ option }) => `${option.name}=${option.value}`);
+		assert.deepEqual(proxyOperations, ['Check=check', 'Generate=generate', 'Get Many=getMany']);
 	});
 
 	it('calls exactly these endpoints and nothing that orders, pays, deposits, deletes or rotates passwords', () => {
@@ -96,13 +140,13 @@ describe('node description', () => {
 		assert.deepEqual(calls, [
 			'account.getBalance GET /api/v1/wallet',
 			'account.getBandwidthHistory GET /api/v1/usage',
-			'freeTool.checkProxies POST /api/proxy-check',
-			'freeTool.getFreeProxies GET /api/proxy-list',
-			'freeTool.lookUpIp GET =/api/ip/{{ String($parameter.ip).trim() }}',
+			'ipAddress.get GET =/api/ip/{{ String($parameter.ip).trim() }}',
 			'plan.get GET =/api/v1/plans/{{$parameter.planId}}',
 			'plan.getAll GET /api/v1/plans',
 			'plan.getTraffic GET =/api/v1/plans/{{$parameter.planId}}/stats',
+			'proxy.check POST /api/proxy-check',
 			'proxy.generate POST =/api/v1/plans/{{$parameter.planId}}/generate',
+			'proxy.getMany GET /api/proxy-list',
 		]);
 		for (const call of calls) {
 			assert.doesNotMatch(
@@ -120,7 +164,7 @@ describe('node description', () => {
 				checkResponse,
 				`${resource}.${option.value}`,
 			);
-			const keyed = description.credentials[0].displayOptions.show.resource.includes(resource);
+			const keyed = credentialShown(resource, option.value);
 			const firstPreSend = (option.routing.send?.preSend ?? [])[0];
 			if (keyed) {
 				assert.equal(firstPreSend, requireApiKey, `${resource}.${option.value} asks for the key`);

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.0
+
+Every operation now sits on the object it acts on, as n8n's verification review asked.
+
+- Get Free Proxies is now **Proxy > Get Many**, next to Proxy > Generate.
+- Check Proxies is now **Proxy > Check**.
+- Look Up IP is now **IP Address > Get**, on the new IP Address resource.
+- The Free Tool resource is removed.
+- The HProxy API credential shows only on the operations that use a key (Account, Plan and Proxy > Generate), through a display condition on resource and operation. Proxy > Get Many, Proxy > Check and IP Address > Get stay free and keyless.
+- Workflows built with 0.1.x that used the free tools need those operations picked again.
+
 ## 0.1.1
 
 The same node as 0.1.0, now published through npm's trusted publishing from GitHub Actions, and the workflows run on current actions (checkout 7.0.1, setup-node 7.1.0, Node 24).

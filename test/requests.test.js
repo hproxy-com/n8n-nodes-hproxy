@@ -271,7 +271,7 @@ describe('Account', () => {
 	});
 });
 
-describe('Free Tool (no API key)', () => {
+describe('Keyless operations: Proxy > Get Many, Proxy > Check, IP Address > Get (no API key)', () => {
 	const row = {
 		ip: '203.0.113.7',
 		port: 1080,
@@ -297,9 +297,9 @@ describe('Free Tool (no API key)', () => {
 		verification_count: 321,
 	};
 
-	it('Get Free Proxies asks for JSON, sends the limit, never the key, and simplifies each row', async () => {
+	it('Proxy > Get Many asks for JSON, sends the limit, never the key, and simplifies each row', async () => {
 		const { request, items, error } = await run(
-			{ resource: 'freeTool', operation: 'getFreeProxies' },
+			{ resource: 'proxy', operation: 'getMany' },
 			answer([row, { ...row, ip: '198.51.100.3' }]),
 		);
 		assert.equal(error, undefined);
@@ -322,11 +322,11 @@ describe('Free Tool (no API key)', () => {
 		]);
 	});
 
-	it('Get Free Proxies turns every filter into the query the API documents', async () => {
+	it('Proxy > Get Many turns every filter into the query the API documents', async () => {
 		const { request, items } = await run(
 			{
-				resource: 'freeTool',
-				operation: 'getFreeProxies',
+				resource: 'proxy',
+				operation: 'getMany',
 				returnAll: true,
 				simplify: false,
 				filters: {
@@ -360,22 +360,22 @@ describe('Free Tool (no API key)', () => {
 		assert.deepEqual(items[0].json, row);
 	});
 
-	it('Get Free Proxies leaves ASN and port open at 0 and refuses a malformed subnet', async () => {
+	it('Proxy > Get Many leaves ASN and port open at 0 and refuses a malformed subnet', async () => {
 		const open = await run(
-			{ resource: 'freeTool', operation: 'getFreeProxies', filters: { asn: 0, port: 0 } },
+			{ resource: 'proxy', operation: 'getMany', filters: { asn: 0, port: 0 } },
 			answer([]),
 		);
 		assert.deepEqual(open.request.query, { format: 'json', limit: '50' });
 
 		const bad = await run(
-			{ resource: 'freeTool', operation: 'getFreeProxies', filters: { subnet: '45.61' } },
+			{ resource: 'proxy', operation: 'getMany', filters: { subnet: '45.61' } },
 			answer([]),
 		);
 		assert.equal(bad.requests.length, 0);
 		assert.equal(bad.error.message, 'The "Subnet" filter is outside what HProxy takes');
 	});
 
-	it('Look Up IP reads one address and keeps ten fields with Simplify on', async () => {
+	it('IP Address > Get reads one address and keeps ten fields with Simplify on', async () => {
 		const body = {
 			ip: '8.8.8.8',
 			country: 'US',
@@ -391,7 +391,7 @@ describe('Free Tool (no API key)', () => {
 			is_datacenter: true,
 		};
 		const { request, items } = await run(
-			{ resource: 'freeTool', operation: 'lookUpIp', ip: ' 8.8.8.8 ' },
+			{ resource: 'ipAddress', operation: 'get', ip: ' 8.8.8.8 ' },
 			answer(body),
 		);
 		assert.equal(request.method, 'GET');
@@ -401,23 +401,23 @@ describe('Free Tool (no API key)', () => {
 		assert.equal(items[0].json.latitude, undefined);
 
 		const ipv6 = await run(
-			{ resource: 'freeTool', operation: 'lookUpIp', ip: '2001:4860:4860::8888' },
+			{ resource: 'ipAddress', operation: 'get', ip: '2001:4860:4860::8888' },
 			answer(body),
 		);
 		assert.equal(ipv6.request.path, '/api/ip/2001:4860:4860::8888');
 	});
 
-	it('Look Up IP sends nothing when the field holds something other than an address', async () => {
+	it('IP Address > Get sends nothing when the field holds something other than an address', async () => {
 		const { requests, error } = await run({
-			resource: 'freeTool',
-			operation: 'lookUpIp',
+			resource: 'ipAddress',
+			operation: 'get',
 			ip: '8.8.8.8/../../api/v1/wallet',
 		});
 		assert.equal(requests.length, 0);
 		assert.equal(error.message, 'The "IP Address" field needs an IPv4 or IPv6 address');
 	});
 
-	it('Check Proxies posts the list from new lines and commas and returns one item per result', async () => {
+	it('Proxy > Check posts the list from new lines and commas and returns one item per result', async () => {
 		const results = [
 			{
 				input: '203.0.113.7:1080',
@@ -436,8 +436,8 @@ describe('Free Tool (no API key)', () => {
 		];
 		const { request, items } = await run(
 			{
-				resource: 'freeTool',
-				operation: 'checkProxies',
+				resource: 'proxy',
+				operation: 'check',
 				proxies: '203.0.113.7:1080\n198.51.100.3:8080, ',
 				simplify: false,
 			},
@@ -453,11 +453,11 @@ describe('Free Tool (no API key)', () => {
 		);
 	});
 
-	it('Check Proxies takes a list from an expression and refuses more than 1,000', async () => {
+	it('Proxy > Check takes a list from an expression and refuses more than 1,000', async () => {
 		const mapped = await harness.run({
 			parameters: {
-				resource: 'freeTool',
-				operation: 'checkProxies',
+				resource: 'proxy',
+				operation: 'check',
 				proxies: '={{ $json.lines }}',
 			},
 			input: { lines: ['203.0.113.7:1080', '198.51.100.3:8080'] },
@@ -470,7 +470,7 @@ describe('Free Tool (no API key)', () => {
 		const tooMany = Array.from({ length: 1001 }, (_, i) => `203.0.113.${i % 250}:${1000 + i}`).join(
 			'\n',
 		);
-		const big = await run({ resource: 'freeTool', operation: 'checkProxies', proxies: tooMany });
+		const big = await run({ resource: 'proxy', operation: 'check', proxies: tooMany });
 		assert.equal(big.requests.length, 0);
 		assert.match(big.error.message, /1001 proxies, more than 1000 per run/);
 	});
@@ -524,7 +524,7 @@ describe('Refusals from HProxy', () => {
 
 	it('429 tells how long to wait and declares the rate limit with the wait', async () => {
 		const { error } = await run(
-			{ resource: 'freeTool', operation: 'lookUpIp', ip: '8.8.8.8' },
+			{ resource: 'ipAddress', operation: 'get', ip: '8.8.8.8' },
 			answer({ error: 'Too many lookups. Slow down and retry.', code: 'rate_limited' }, 429, {
 				'retry-after': '7',
 			}),
@@ -552,14 +552,14 @@ describe('Answers without the expected list', () => {
 		assert.deepEqual(plans.items, []);
 
 		const checked = await run(
-			{ resource: 'freeTool', operation: 'checkProxies', proxies: '203.0.113.7:1080' },
+			{ resource: 'proxy', operation: 'check', proxies: '203.0.113.7:1080' },
 			answer({ count: 0 }),
 		);
 		assert.equal(checked.error, undefined);
 		assert.deepEqual(checked.items, []);
 
 		const listed = await run(
-			{ resource: 'freeTool', operation: 'getFreeProxies' },
+			{ resource: 'proxy', operation: 'getMany' },
 			answer({ notAList: true }),
 		);
 		assert.equal(listed.error, undefined);

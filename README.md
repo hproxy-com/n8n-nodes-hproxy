@@ -32,7 +32,7 @@ The node then shows up as **HProxy** in the nodes panel.
 
 ## Credentials
 
-The Account, Plan and Proxy operations act on your HProxy account and need an API key. The Free Tool operations need none.
+Account, Plan and Proxy > Generate act on your HProxy account and need an API key. Proxy > Get Many, Proxy > Check and IP Address > Get use HProxy's free tools and need none, so n8n shows the credential field only on the operations that use a key.
 
 1. Sign in to your [HProxy dashboard](https://hproxy.com/dashboard) and open **Settings > API keys**.
 2. Create a key. Tick **Read plans**: it covers every operation of this node except Get Balance and never spends money. Get Balance reads your wallet and also needs **Place orders**.
@@ -46,14 +46,14 @@ The key travels in the `X-API-Key` header to `https://hproxy.com` and nowhere el
 | Resource | Operation | What it does | API |
 | --- | --- | --- | --- |
 | Proxy | Generate | Ready-to-use proxy lines from one of your plans | `POST /api/v1/plans/{id}/generate` |
+| Proxy | Get Many | Working public proxies from the free list, no key | `GET /api/proxy-list` |
+| Proxy | Check | A live test of up to 1,000 proxies, no key | `POST /api/proxy-check` |
 | Plan | Get | One plan with its traffic left, read live | `GET /api/v1/plans/{id}` |
 | Plan | Get Many | The plans on your account | `GET /api/v1/plans` |
 | Plan | Get Traffic | Bytes, requests and success rate over time | `GET /api/v1/plans/{id}/stats` |
 | Account | Get Balance | Your wallet balance | `GET /api/v1/wallet` |
 | Account | Get Bandwidth History | Traffic used per day and per plan | `GET /api/v1/usage` |
-| Free Tool | Get Free Proxies | Working public proxies from the free list | `GET /api/proxy-list` |
-| Free Tool | Check Proxies | A live test of up to 1,000 proxies | `POST /api/proxy-check` |
-| Free Tool | Look Up IP | Country, city, network and ISP of an address | `GET /api/ip/{ip}` |
+| IP Address | Get | Country, city, network and ISP of an address, no key | `GET /api/ip/{ip}` |
 
 Every plan field accepts a plan picked from a list, its ID, or an expression.
 
@@ -94,9 +94,9 @@ Generating lines costs nothing. Traffic counts only when the lines carry request
 
 **Get Balance** returns the wallet in cents, for example `{ "balanceCents": 25765, "currency": "USD" }`. **Get Bandwidth History** returns the GB used per day and per plan over the last 1 to 365 days, optionally for one plan.
 
-### Free Tool: Get Free Proxies
+### Proxy: Get Many
 
-Working public proxies from the [free proxy list](https://hproxy.com/free-proxy-list), one item each. Filter by anonymity, country, network, latency, uptime, port, protocol and /24 subnet, and sort by uptime to get the most reliable ones first. With **Simplify** on, each item keeps the ten most used fields:
+Working public proxies from the [free proxy list](https://hproxy.com/free-proxy-list), one item each, without an API key. Filter by anonymity, country, network, latency, uptime, port, protocol and /24 subnet, and sort by uptime to get the most reliable ones first. With **Simplify** on, each item keeps the ten most used fields:
 
 ```json
 {
@@ -113,21 +113,21 @@ Working public proxies from the [free proxy list](https://hproxy.com/free-proxy-
 }
 ```
 
-### Free Tool: Check Proxies
+### Proxy: Check
 
-Enter up to 1,000 proxies, one per line or separated by commas, as `ip:port`, `host:port:user:pass` or `user:pass@host:port`. An expression can hand in a list from earlier nodes. HProxy tests each one live and the node returns one item per proxy with `status` (alive, dead, unchecked and more), protocols, anonymity, latency, exit IP and location.
+No API key needed. Enter up to 1,000 proxies, one per line or separated by commas, as `ip:port`, `host:port:user:pass` or `user:pass@host:port`. An expression can hand in a list from earlier nodes. HProxy tests each one live and the node returns one item per proxy with `status` (alive, dead, unchecked and more), protocols, anonymity, latency, exit IP and location.
 
-### Free Tool: Look Up IP
+### IP Address: Get
 
-Enter one public IPv4 or IPv6 address, such as `8.8.8.8`, and get its country, region, city, timezone, network and ISP.
+Enter one public IPv4 or IPv6 address, such as `8.8.8.8`, and get its country, region, city, timezone, network and ISP, without an API key.
 
 ## Example workflows
 
 - **Lines for a scraper.** Schedule Trigger, then HProxy **Generate** with Count 10, Country US and sticky sessions of 30 minutes, then write each `line` to the file, sheet or queue your scraper reads.
 - **Low balance alert.** Schedule Trigger once a day, HProxy **Get Balance**, an IF node on `balanceCents`, and a message to Slack or email when it drops below your threshold.
-- **Plan running low.** Schedule Trigger, HProxy **Get Many**, an IF node on `dataGbRemaining`, and a reminder to top up.
-- **Fresh free proxies, tested from HProxy.** HProxy **Get Free Proxies** with Protocols SOCKS5 and Min Uptime 70, then HProxy **Check Proxies** with **Execute Once** on and `{{ $input.all().map(item => item.json.ip + ':' + item.json.port).join('\n') }}` as Proxies, then keep the items whose `alive` is true.
-- **Where do these visitors come from.** Any list of IP addresses, then HProxy **Look Up IP** to add country, city and network to each.
+- **Plan running low.** Schedule Trigger, HProxy **Plan > Get Many**, an IF node on `dataGbRemaining`, and a reminder to top up.
+- **Fresh free proxies, tested from HProxy.** HProxy **Proxy > Get Many** with Protocols SOCKS5 and Min Uptime 70, then HProxy **Proxy > Check** with **Execute Once** on and `{{ $input.all().map(item => item.json.ip + ':' + item.json.port).join('\n') }}` as Proxies, then keep the items whose `alive` is true.
+- **Where do these visitors come from.** Any list of IP addresses, then HProxy **IP Address > Get** to add country, city and network to each.
 - **From an AI agent.** The node is usable as a tool, so an n8n AI Agent can look up an IP, check a proxy or fetch free proxies when a conversation needs it.
 
 ## When something goes wrong
@@ -164,6 +164,7 @@ Built and tested against n8n-workflow 2.46. The node uses n8n's declarative styl
 
 ## Version history
 
+- **0.2.0:** every operation sits on the object it acts on, after n8n's review. Get Free Proxies is now Proxy > Get Many, Check Proxies is Proxy > Check and Look Up IP is IP Address > Get, and the Free Tool resource is gone. The credential field shows only on the operations that use a key. Workflows built with 0.1.x need these operations picked again.
 - **0.1.1:** the same node, published through npm's trusted publishing from GitHub Actions.
 - **0.1.0:** first release. Proxy Generate, Plan Get, Get Many and Get Traffic, Account Get Balance and Get Bandwidth History, and the free tools Get Free Proxies, Check Proxies and Look Up IP.
 
